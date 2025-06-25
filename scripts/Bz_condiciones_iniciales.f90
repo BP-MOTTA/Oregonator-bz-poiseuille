@@ -80,7 +80,8 @@ end subroutine
 !end subroutine
 
 subroutine paso_bz()
-  use parametros, variables
+  use parametros
+  Use variables
   integer :: i, j
   real(dp) :: div, dxu, dyu, dxv, dyv
 
