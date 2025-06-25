@@ -1,13 +1,16 @@
 # Caracterización de ondas químicas en flujo laminar (BZ - Poiseuille)
 
 ---
-
+![Flujo laminar de Poiseuille](figs/poiseulle.jpg)
 ## 🧪 Descripción general
 
 Este proyecto tiene como objetivo estudiar el comportamiento de las ondas químicas generadas por la reacción de Belousov-Zhabotinsky (BZ) en presencia de un **flujo laminar tipo Poiseuille** dentro de una **caja rectangular** con:
 
 - Condiciones **periódicas** en los bordes izquierdo y derecho.
 - Condiciones de **no flujo** en la tapa y la base.
+
+![Esquema de condiciones de frontera](figs/c_frontera.jpg)
+
 
 El modelo se basa en el **Oregonator de dos variables**, incluyendo términos de advección y una implementación numérica en **Fortran**, con análisis posterior en **Python**.
 
