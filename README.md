@@ -49,3 +49,13 @@ caracterizacion-bz-poiseuille/
 ├── figs/               # Figuras y gráficas generadas
 ├── doc/                # Documentos, borradores, artículos científicos
 └── notebooks/          # Jupyter Notebooks explicativos y análisis interactivo
+
+## Pasos para correr el codigo.
+### Condiciones iniciales
+    - el codigo esta en el Bz_condiciones_iniciales.f90
+    - cambia el comentario segun la necesidad de si se usa o no OMP
+    - en el caso de usar es OMP el sistema debe usarse como:
+        gfortran -fopenmp -O3 -o CI Bz_condiciones_iniciales.90
+        export OMP_NUM_THREADS=4   # o el número de núcleos que tengas
+        ./CI
+    - en linux para verificar si es esta usando o no los nucleos se puede usar en la terminal nproc

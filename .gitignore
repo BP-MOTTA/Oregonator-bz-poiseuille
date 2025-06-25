@@ -1,3 +1,6 @@
 output/
 *.dat
 *.h5
+scripts/
+*.o
+*.mod
