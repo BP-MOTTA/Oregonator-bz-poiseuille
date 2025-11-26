@@ -1,7 +1,7 @@
 module parametros
     implicit none
     integer, parameter :: dp = selected_real_kind(15,307)
-    integer, parameter :: N=400, M=21
+    integer, parameter :: N=800, M=21
     real(dp),parameter :: dt = 1.0d-6, hx = 0.1d0, hy = 0.1d0
     real(dp), parameter :: f = 3.0d0, q = 0.0002d0, e = 0.01d0
     real(dp), parameter :: Du = 1.0d0, Dv = 1.0d0
@@ -85,17 +85,18 @@ subroutine paso_bz()
   integer :: i, j
   real(dp) :: div, dxu, dyu, dxv, dyv
 
-  !$omp parallel do private(i,j,div,dxu,dyu,dxv,dyv) shared(u,v,uf,vf)
+ !$omp parallel do default(shared) private(i,j,div,dxu,dyu,dxv,dyv)
   do i = 2, N - 1
     do j = 2, M - 1
       div = (u(i,j) - q) / (u(i,j) + q)
       dxu = (u(i+1,j) + u(i-1,j) - 2*u(i,j)) / (hx**2)
       dyu = (u(i,j+1) + u(i,j-1) - 2*u(i,j)) / (hy**2)
-      uf(i,j) = u(i,j) + dt * (Du * (dxu + dyu) + (1/e) * (u(i,j) - u(i,j)**2 - f*v(i,j)*div))
+      uf(i,j) = u(i,j) + dt * ( Du*(dxu + dyu) &
+           + (1.0_dp/e) * (u(i,j) - u(i,j)**2 - f*v(i,j)*div) )
 
       dxv = (v(i+1,j) + v(i-1,j) - 2*v(i,j)) / (hx**2)
       dyv = (v(i,j+1) + v(i,j-1) - 2*v(i,j)) / (hy**2)
-      vf(i,j) = v(i,j) + dt * (Dv * (dxv + dyv) + u(i,j) - v(i,j))
+      vf(i,j) = v(i,j) + dt * ( Dv*(dxv + dyv) + u(i,j) - v(i,j) )
     end do
   end do
   !$omp end parallel do
