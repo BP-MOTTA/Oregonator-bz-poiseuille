@@ -43,8 +43,17 @@ El modelo se basa en el **Oregonator de dos variables**, incluyendo términos de
         export OMP_NUM_THREADS=4   # o el número de núcleos que tengas
         ./CI
     - en linux para verificar si es esta usando o no los nucleos se puede usar en la terminal nproc
-
+    - buscar la salida adecuada (luego de la eliminacion del medio pulso), seleccionar un pulso adecuado y cambiar nombre a CI.dat
+### Evolucion del pulso químico
+    - el codigo esta en el Poiseulli.f90
+    - verificar los valores de N y M que este de acuerdo a los datos generados
+    - verificar que se generen las salidas en formato HDF5 y DAT para snapshots y velocidad
+    - los datos obtenidos deben estar en sus carpetas respectivas para su analisis en python (aun por realizar)
 ---
+
+## Salida de datos 
+- .dat para verificacion de la posicion del pulso (t,xcm,vueltas)
+- .HDF5 para snapshots, se guardan los campos (u y v) y los pasos en cada instancia (aun falta revisar)
 
 ## 📁 Estructura del repositorio
 
