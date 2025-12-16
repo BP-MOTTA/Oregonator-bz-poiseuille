@@ -10,6 +10,7 @@ module parameters
     real(dp), parameter :: vl_initial = 0.00_dp
     real(dp), parameter :: vl_max     = 1.50_dp
     real(dp), parameter :: vl_step    = 0.02_dp
+    integer, parameter :: Ndiag = 5000 !lectura de datos de velocidad
 end module parameters
 
 
@@ -30,6 +31,8 @@ program CI
 
     vl = vl_initial
     call load_initial_conditions(u_initial, v_initial) !lectura de las CI
+
+
     do while (vl <= vl_max + 1.0e-10_dp) !cambio de los valores promedios de velocida
         vl_int   = nint(vl * 100.0_dp)          !hundredths as integer
         vl_whole = vl_int / 100
@@ -37,7 +40,8 @@ program CI
         write(folder_name, '(A,I0,"_",I2.2)') 'v', vl_whole, vl_frac
         call system('mkdir -p '//trim(folder_name)) 
         call initialize_from_constants(u, v, u_initial, v_initial, vel, vl) 
-
+        print*, folder_name
+        call iniciar_diag_xcm(trim(folder_name)//'/xcm_x.dat')
         ! Bucle de tiempo
         file_count = 0
         do T = 1, Tmax
@@ -48,16 +52,19 @@ program CI
 
             call no_flux_boundary(u, v)
             call periodic_boundary(u, v)
-
+            
             ! Guardar datos cada 3000 pasos
             if (mod(T, 3000) == 0) then
-                write(num, '(I4.4)') T / 3000
+                write(num, '(I4.4)') T / 300000
                 call save_data_to_file(N, M, u, v, &
                      trim(folder_name)//'/datosVel'//trim(num))
 
                 file_count = file_count + 1
                 if (file_count >= max_files) exit
             end if
+            !lectura de velocidad
+            if (mod(T, Ndiag) == 0) call diagnostico_xcm_x(T, u, trim(folder_name)//'/xcm_x.dat')
+
         end do
 
         ! Siguiente valor de velocidad máxima
@@ -236,3 +243,77 @@ subroutine periodic_boundary(u, v)
         v(N,j) = v(2,j)
     end do
 end subroutine periodic_boundary
+
+subroutine iniciar_diag_xcm(filename)
+    use parameters
+    implicit none
+    character(len=*), intent(in) :: filename
+    integer :: unit
+
+    unit = 60
+    open(unit=unit, file=trim(filename), status='replace', action='write')
+    ! t  x_cm  theta_cm  umax  flag
+    write(unit,'(A)') '# t  x_cm  theta_cm(rad)  umax  flag'
+    close(unit)
+end subroutine iniciar_diag_xcm
+
+subroutine diagnostico_xcm_x(t, u, filename)
+    use parameters
+    implicit none
+    integer, intent(in) :: t
+    real(dp), dimension(N,M), intent(in) :: u
+    character(len=*), intent(in) :: filename
+
+    integer :: i, j, unit, flag
+    integer :: Nx_phys
+    real(dp) :: mass, umax, t_phys
+    real(dp) :: theta, csum, ssum, uij
+    real(dp) :: theta_cm, xcm
+    real(dp) :: pi, Lx
+
+    pi = acos(-1.0_dp)
+
+    ! Dominio físico en x: i = 2 .. N-1  (porque 1 y N son ghost)
+    Nx_phys = N - 2
+    Lx = real(Nx_phys,dp) * hx
+
+    mass = 0.0_dp
+    umax = 0.0_dp
+    csum = 0.0_dp
+    ssum = 0.0_dp
+
+    do i = 2, N-1
+        ! i=2 -> theta=0, i=N-1 -> theta=2pi*(Nx_phys-1)/Nx_phys
+        theta = 2.0_dp*pi * real(i-2,dp) / real(Nx_phys,dp)
+
+        do j = 1, M
+            uij  = u(i,j)
+            mass = mass + uij
+            csum = csum + uij * cos(theta)
+            ssum = ssum + uij * sin(theta)
+            if (uij > umax) umax = uij
+        end do
+    end do
+
+    if (umax > 1.0e-3_dp) then
+        flag = 1
+    else
+        flag = 0
+    end if
+
+    if (mass > 0.0_dp) then
+        theta_cm = atan2(ssum, csum)      ! [-pi, pi]
+        if (theta_cm < 0.0_dp) theta_cm = theta_cm + 2.0_dp*pi  ! [0,2pi)
+        xcm = (theta_cm / (2.0_dp*pi)) * Lx                      ! [0,Lx)
+    else
+        theta_cm = -1.0_dp
+        xcm      = -1.0_dp
+    end if
+
+    t_phys = dt * real(t,dp)
+
+    unit = 60
+    open(unit=unit, file=trim(filename), status='unknown', position='append', action='write')
+    write(unit,'(F15.8,1X,F15.8,1X,F15.8,1X,E15.8,1X,I2)') t_phys, xcm, theta_cm, umax, flag
+    close(unit)
+end subroutine diagnostico_xcm_x

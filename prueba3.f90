@@ -112,7 +112,7 @@ subroutine initialize_from_constants(u, v, u_initial, v_initial, vel, vl)
 	vel(1) =0
 	vel(M-1) =0
     do JJ = 2, M-1  ! Coordenada y centrada en el canal
-        vel(JJ) = v_max*JJ*(20-JJ) 
+        vel(JJ) = v_max*JJ*(21-JJ) 
     end do
 
 end subroutine initialize_from_constants
