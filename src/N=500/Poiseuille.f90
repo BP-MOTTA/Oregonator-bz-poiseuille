@@ -1,7 +1,7 @@
 module parameters
     implicit none
     integer, parameter :: dp = selected_real_kind(15,307)
-    integer, parameter :: N = 400, M = 21
+    integer, parameter :: N = 500, M = 21
     real(dp), parameter :: hx = 0.10_dp, hy = 0.10_dp
     real(dp), parameter :: dt = 5.0e-6_dp
     real(dp), parameter :: f = 3.0_dp, q = 2.0e-4_dp, e = 1.0e-2_dp

@@ -31,7 +31,7 @@ print(f"Leyendo: {fname}")
 # LECTURA
 # columnas: t, x_cm, theta_cm, umax, flag
 # -------------------------
-data  = np.loadtxt(fname, comments= "#")
+data  = np.loadtxt(fname)
 t     = data[:, 0]
 theta = data[:, 2]
 flag  = data[:, 4].astype(int)

@@ -13,10 +13,10 @@ block = 20      # tamaño de ventana para polyfit
 step  = 1      # salto entre ventanas (20 => bloques no solapados; 1 => deslizante)
 
 base = Path(__file__).resolve().parent
-fname = base / "xcm.dat"
+fname = base / "xcm_x.dat"
 print(fname)
 if not fname.exists():
-    cand = list(base.rglob("xcm.dat"))
+    cand = list(base.rglob("xcm_x.dat"))
     if cand:
         fname = cand[0]
     else:

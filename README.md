@@ -34,26 +34,100 @@ El modelo se basa en el **Oregonator de dos variables**, incluyendo términos de
 
 ---
 
-## Pasos para correr el codigo.
-### Condiciones iniciales
-    - el codigo esta en el Bz_condiciones_iniciales.f90
-    - cambia el comentario segun la necesidad de si se usa o no OMP
-    - en el caso de usar es OMP el sistema debe usarse como:
-        gfortran -fopenmp -O3 -o CI Bz_condiciones_iniciales.90
-        export OMP_NUM_THREADS=4   # o el número de núcleos que tengas
-        ./CI
-    - en linux para verificar si es esta usando o no los nucleos se puede usar en la terminal nproc
-    - buscar la salida adecuada (luego de la eliminacion del medio pulso), seleccionar un pulso adecuado y cambiar nombre a CI.dat
-### Evolucion del pulso químico
-    - el codigo esta en el Poiseulli.f90
-    - verificar los valores de N y M que este de acuerdo a los datos generados
-    - verificar que se generen las salidas en formato HDF5 y DAT para snapshots y velocidad
-    - los datos obtenidos deben estar en sus carpetas respectivas para su analisis en python (aun por realizar)
+## ✅ Checklist de ejecución (Fortran + HDF5 + OpenMP + Python)
+
+### 0) Preparación (una vez)
+- [ ] Instalar dependencias del sistema: `gfortran`, `libhdf5-dev`, `hdf5-tools`, `ffmpeg`
+- [ ] Crear/activar entorno Python y librerías: `numpy`, `matplotlib`, `h5py`
+
 ---
 
-## Salida de datos 
-- .dat para verificacion de la posicion del pulso (t,xcm,vueltas)
-- .HDF5 para snapshots, se guardan los campos (u y v) y los pasos en cada instancia (aun falta revisar)
+### 1) Preparar caso por malla (N)
+- [ ] Copiar `Poiseuille.f90` al folder del caso (ej. `src/N=400/`)
+- [ ] Editar `module parameters` y fijar:
+  - [ ] `N = ...`
+  - [ ] `M = ...`
+  - [ ] `Nsnap` y `Nsnap_total` según el experimento
+  - [ ] rango de `vl` (`vl_initial`, `vl_max`, `vl_step`)
+- [ ] Verificar que `io_hdf5.f90` esté en la misma carpeta del caso
+
+---
+
+### 2) Compilar (HDF5 + OpenMP)
+Dentro de `src/N=XXX/`:
+- [ ] Compilar:
+  - [ ] `h5fc -O3 -fopenmp Poiseuille.f90 io_hdf5.f90 -o bz`
+- [ ] Confirmar ejecutable:
+  - [ ] `ls -lh bz`
+
+---
+
+### 3) Ejecutar simulación (OpenMP)
+Dentro de `src/N=XXX/`:
+- [ ] Correr con hilos:
+  - [ ] `OMP_NUM_THREADS=8 ./bz`
+- [ ] (Opcional) Afinidad recomendada:
+  - [ ] `OMP_NUM_THREADS=8 OMP_PROC_BIND=close OMP_PLACES=cores ./bz`
+
+---
+
+### 4) Verificar que se generaron salidas por cada `vl`
+Dentro de `src/N=XXX/`:
+- [ ] Se crearon carpetas `vX_YY/`
+- [ ] En un caso de prueba (ej. `v0_00/`) existen:
+  - [ ] `run.h5`
+  - [ ] `xcm_x.dat`
+
+---
+
+### 5) Copiar scripts de análisis (por cada caso N)
+En `src/N=XXX/`:
+- [ ] Copiar:
+  - [ ] `verificador.py`
+  - [ ] `velocidad.py`
+  - [ ] `make_video_h5.py`
+
+---
+
+### 6) Verificación del HDF5 (rápido)
+Dentro de `src/N=XXX/`:
+- [ ] Revisar estructura:
+  - [ ] `h5ls -r v0_00/run.h5`
+- [ ] Verificar con Python:
+  - [ ] `python3 verificador.py v0_00/run.h5`
+
+---
+
+### 7) Velocidad del pulso (desde `xcm_x.dat`)
+Dentro de `src/N=XXX/vX_YY/`:
+- [ ] Ejecutar:
+  - [ ] `python3 ../velocidad.py`
+- [ ] Confirmar:
+  - [ ] gráfica `x_cm(t)` (unwrapped)
+  - [ ] velocidad por bloques (ventanas)
+  - [ ] valor final de velocidad (comparar con caso libre ~17.4)
+
+---
+
+### 8) Video desde HDF5 (heatmap + perfil 1D)
+Dentro de `src/N=XXX/vX_YY/`:
+- [ ] Video de `u`:
+  - [ ] `python3 ../make_video_h5.py run.h5 --field u --j 11 --fps 20 --figsize 12 6`
+- [ ] Video de `v`:
+  - [ ] `python3 ../make_video_h5.py run.h5 --field v --j 11 --fps 20 --figsize 12 6`
+- [ ] (Opcional) reducir peso:
+  - [ ] `python3 ../make_video_h5.py run.h5 --field u --j 11 --stride 3 --fps 20 --figsize 12 6`
+- [ ] (Opcional) GIF si no hay ffmpeg:
+  - [ ] `python3 ../make_video_h5.py run.h5 --field u --gif --stride 3 --fps 10`
+
+---
+
+### 9) Checklist final por cada `vl`
+- [ ] `run.h5` tiene datasets `/t`, `/u`, `/v`
+- [ ] `xcm_x.dat` se llena durante la corrida
+- [ ] La velocidad estimada no es cero (caso libre ≈ 17.4)
+- [ ] El video muestra pulso estable (heatmap + perfil 1D coherente)
+
 
 ## 📁 Estructura del repositorio
 
