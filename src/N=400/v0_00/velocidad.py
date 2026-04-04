@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # -------------------------
 hx = 0.10
 dt = 5.0e-6
-N  = 800
+N  = 400
 
 block = 20      # tamaño de ventana para polyfit
 step  = 1      # salto entre ventanas (20 => bloques no solapados; 1 => deslizante)
