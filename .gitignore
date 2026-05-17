@@ -5,3 +5,9 @@ scripts/
 *.o
 *.mod
 *.dat
+*.csv
+src/
+*.o
+*.mod
+*.dat
+*.csv
